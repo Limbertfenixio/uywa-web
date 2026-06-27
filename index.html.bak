@@ -1702,12 +1702,6 @@
 
             <p class="text-xs text-brand-teal font-semibold"><i class="fas fa-shield-alt"></i> Descarga Segura y
                 Verificada</p>
-
-            <a href="#"
-                class="sm:hidden mt-4 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-brand-teal to-brand-tealHover text-white font-bold py-3 px-6 rounded-full text-sm hover:scale-105 transition-all duration-300 w-full"
-                onclick="closeQrModal(); openComingSoonModal(event)">
-                <i class="fas fa-download"></i> Descarga Directa
-            </a>
         </div>
     </div>
 
@@ -1731,11 +1725,11 @@
 
             <div class="bg-brand-lightBg p-4 rounded-2xl border border-brand-border mb-6 text-left">
                 <p class="text-xs font-semibold text-brand-dark mb-2">¡Recibe una notificación de lanzamiento!</p>
-                <form onsubmit="handleNotificationSubscription(event)" class="flex flex-col sm:flex-row gap-2">
+                <form onsubmit="handleNotificationSubscription(event)" class="flex gap-2">
                     <input type="email" required id="comingSoonEmail" placeholder="Tu correo electrónico"
                         class="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-teal" />
                     <button type="submit"
-                        class="bg-brand-teal hover:bg-brand-tealHover text-white font-bold text-xs px-4 py-2 rounded-xl transition-colors shrink-0 whitespace-nowrap w-full sm:w-auto">
+                        class="bg-brand-teal hover:bg-brand-tealHover text-white font-bold text-xs px-4 py-2 rounded-xl transition-colors">
                         Unirse
                     </button>
                 </form>
