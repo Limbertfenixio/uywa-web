@@ -1,0 +1,2233 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UYWA - Tu App de Mascotas</title>
+    <!-- Font Awesome (iconos) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            teal: '#5BC0BE',
+                            tealHover: '#3A8F8D',
+                            orange: '#FF9F1C',
+                            dark: '#0F172A',
+                            lightBg: '#F8FAFC',
+                            cardBg: '#FFFFFF',
+                            border: '#E2E8F0'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* ===== REGISTRO DE FUENTES Y ESTILOS GLOBALES ===== */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8FAFC;
+            color: #0F172A;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Fredoka', sans-serif;
+        }
+
+        /* ===== SCROLLBAR PERSONALIZADA ===== */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #F1F5F9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #5BC0BE;
+            border-radius: 10px;
+            border: 2px solid #F1F5F9;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3A8F8D;
+        }
+
+        /* ===== ANIMACIÓN MODERNA DEL HERO SLIDER ===== */
+        .slider-container {
+            position: relative;
+            width: 100%;
+            height: 480px;
+            overflow: hidden;
+            border-radius: 32px;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+            background: #E2E8F0;
+        }
+
+        .slider-container:hover .slider-pause-badge {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .slider-pause-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 50;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            color: white;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 999px;
+            opacity: 0;
+            transform: translateY(-8px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .hero-slide {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+            will-change: transform, opacity, filter;
+        }
+
+        .hero-slide.active {
+            opacity: 1;
+            pointer-events: auto;
+            z-index: 20;
+            transform: scale(1) translateX(0);
+            filter: blur(0px);
+        }
+
+        /* Transición de entrada moderna: Zoom + deslizamiento suave */
+        .hero-slide.entering {
+            animation: slideEnter 0.9s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            z-index: 25;
+        }
+
+        /* Transición de salida: Zoom out + blur + desplazamiento */
+        .hero-slide.exiting {
+            animation: slideExit 0.9s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+            z-index: 20;
+            opacity: 1;
+        }
+
+        @keyframes slideExit {
+            0% {
+                transform: scale(1) translateX(0);
+                opacity: 1;
+                filter: blur(0px);
+            }
+            100% {
+                transform: scale(0.92) translateX(-60px);
+                opacity: 0;
+                filter: blur(6px);
+            }
+        }
+
+        @keyframes slideEnter {
+            0% {
+                transform: scale(1.08) translateX(60px);
+                opacity: 0;
+                filter: blur(6px);
+            }
+            100% {
+                transform: scale(1) translateX(0);
+                opacity: 1;
+                filter: blur(0px);
+            }
+        }
+
+        /* Dots de navegación del slider */
+        .slider-dots {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 40;
+            display: flex;
+            gap: 8px;
+        }
+
+        .slider-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            padding: 0;
+        }
+
+        .slider-dot.active {
+            background: white;
+            width: 28px;
+            border-radius: 4px;
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+        }
+
+        .slider-dot:hover {
+            background: rgba(255, 255, 255, 0.7);
+            transform: scale(1.3);
+        }
+
+        /* Degradado protector sobre las imágenes de las mascotas */
+        .slide-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(15, 23, 42, 0.45) 0%, rgba(15, 23, 42, 0.1) 60%);
+        }
+
+        /* ===== ESTADOS Y SIMULADOR ===== */
+        .sim-state {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 16px;
+            opacity: 0;
+            transform: scale(0.96);
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 5;
+        }
+
+        .sim-state.active {
+            opacity: 1;
+            transform: scale(1);
+            pointer-events: auto;
+        }
+
+        /* ===== SCROLL REVEAL ===== */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== EFECTOS DE BOTONES ===== */
+        .btn-glow-teal {
+            box-shadow: 0 4px 14px rgba(91, 192, 190, 0.35);
+        }
+
+        .btn-glow-teal:hover {
+            box-shadow: 0 8px 25px rgba(91, 192, 190, 0.5);
+        }
+
+        /* ===== ESTILOS DE LOS MODALES ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        /* ===== FUNCIONALIDADES CLAVE MEJORADAS ===== */
+        .feature-screenshot-card {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .feature-screenshot-card:hover {
+            transform: translateY(-8px) scale(1.02);
+        }
+
+        .feature-screenshot-card .phone-frame img {
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .feature-screenshot-card:hover .phone-frame img {
+            transform: scale(1.08);
+        }
+
+        .feature-screenshot-card .feature-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(15, 23, 42, 0.75) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .feature-screenshot-card:hover .feature-overlay {
+            opacity: 1;
+        }
+
+        .feature-screenshot-card:hover .feature-hover-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .feature-hover-content {
+            opacity: 0;
+            transform: translateY(12px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .feature-screenshot-card .feature-icon-ring {
+            position: relative;
+            transition: all 0.4s ease;
+        }
+
+        .feature-screenshot-card:hover .feature-icon-ring {
+            transform: scale(1.12) rotate(-5deg);
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% center;
+            }
+
+            100% {
+                background-position: 200% center;
+            }
+        }
+
+        .shimmer-text {
+            background: linear-gradient(90deg, #5BC0BE 0%, #FF9F1C 50%, #5BC0BE 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        .gradient-border-card {
+            position: relative;
+            background-clip: padding-box;
+        }
+
+        .gradient-border-card::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: inherit;
+            background: linear-gradient(135deg, transparent 40%, #5BC0BE, #FF9F1C, transparent 60%);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .gradient-border-card:hover::before {
+            opacity: 1;
+        }
+
+        .active-feature-indicator {
+            animation: pulseIndicator 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes pulseIndicator {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .feature-phone-glare {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .feature-screenshot-card:hover .feature-phone-glare {
+            opacity: 1;
+        }
+
+        /* ===== Generador visual de QR ===== */
+        .simulated-qr {
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(#0F172A 30%, transparent 35%), radial-gradient(#0F172A 30%, transparent 35%);
+            background-size: 14px 14px;
+            background-position: 0 0, 7px 7px;
+            opacity: 0.85;
+        }
+
+        .simulated-qr-corner {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            border: 6px solid #0F172A;
+            background: #FFFFFF;
+        }
+
+        .sq-tl {
+            top: 12px;
+            left: 12px;
+        }
+
+        .sq-tr {
+            top: 12px;
+            right: 12px;
+        }
+
+        .sq-bl {
+            bottom: 12px;
+            left: 12px;
+        }
+
+        /* ===== NAVEGACIÓN SPA DE VISTAS ===== */
+        .view-container {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+        }
+
+        .view-container.active-view {
+            display: block;
+            opacity: 1;
+        }
+
+        /* Estilo para acordeón FAQ */
+        .faq-accordion-header {
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .faq-accordion-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0, 1, 0, 1);
+        }
+
+        .faq-accordion-item.active .faq-accordion-body {
+            max-height: 1000px;
+            transition: max-height 0.3s cubic-bezier(1, 0, 1, 0);
+        }
+
+        .faq-accordion-item.active .faq-arrow {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+
+<body class="bg-brand-lightBg text-brand-dark">
+
+    <!-- ===== HEADER (STRICTLY LANDING NAV) ===== -->
+    <header id="mainHeader"
+        class="fixed top-0 left-0 w-full bg-white/80 backdrop-blur-md border-b border-brand-border z-[1000] py-4 transition-all duration-300">
+        <div class="container mx-auto px-6 flex justify-between items-center">
+            <a href="#home" class="logo flex items-center gap-2.5 text-2xl font-bold text-brand-dark">
+                <img src="IMG-20260626-WA0027.jpg/IMG-20260626-WA0008.jpg" alt="UYWA"
+                    class="w-10 h-10 object-cover rounded-full border border-brand-border shadow-sm transition-transform duration-300 hover:scale-110"
+                    onerror="this.src='https://placehold.co/40x40/5BC0BE/ffffff?text=🐾'" />
+                <span class="bg-gradient-to-r from-brand-teal to-brand-orange bg-clip-text text-transparent">UYWA</span>
+            </a>
+
+            <!-- Header navigation strictly points to internal landing page sections -->
+            <ul class="nav-links hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600" id="navLinks">
+                <li><a href="#home"
+                        class="hover:text-brand-dark transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:height-[2px] after:bg-brand-teal hover:after:w-full after:transition-all after:duration-300">Inicio</a>
+                </li>
+                <li><a href="#features"
+                        class="hover:text-brand-dark transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:height-[2px] after:bg-brand-teal hover:after:w-full after:transition-all after:duration-300">Características</a>
+                </li>
+                <li><a href="#capturas"
+                        class="hover:text-brand-dark transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:height-[2px] after:bg-brand-teal hover:after:w-full after:transition-all after:duration-300">Funcionalidades</a>
+                </li>
+                <li><a href="#status"
+                        class="hover:text-brand-dark transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:height-[2px] after:bg-brand-teal hover:after:w-full after:transition-all after:duration-300">Clasificación</a>
+                </li>
+                <li><a href="#testimonios"
+                        class="hover:text-brand-dark transition-colors relative after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:height-[2px] after:bg-brand-teal hover:after:w-full after:transition-all after:duration-300">Testimonios</a>
+                </li>
+                <li><a href="#"
+                        class="btn-download-nav bg-gradient-to-r from-brand-teal to-brand-tealHover py-2.5 px-6 rounded-full text-white font-bold hover:scale-105 transition-transform duration-300"
+                        onclick="openComingSoonModal(event)">Obtener App</a></li>
+            </ul>
+
+            <div class="menu-toggle md:hidden text-2xl cursor-pointer text-brand-dark hover:text-brand-teal transition-colors"
+                id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== MAIN VIEWS CONTAINER ===== -->
+    <main class="min-h-screen pt-24">
+
+        <!-- ==================== VISTA: HOME (LANDING PAGE) ==================== -->
+        <div id="view-home" class="view-container active-view">
+
+            <!-- ===== HERO SECTION ===== -->
+            <section
+                class="hero pb-20 md:pt-12 md:pb-28 bg-gradient-to-br from-teal-50/70 via-white to-orange-50/50 relative overflow-hidden"
+                id="home">
+                <div
+                    class="absolute w-[250px] h-[250px] bg-brand-teal/10 rounded-full blur-[80px] top-10 left-[-50px] pointer-events-none">
+                </div>
+                <div
+                    class="absolute w-[350px] h-[350px] bg-brand-orange/10 rounded-full blur-[100px] bottom-5 right-[-100px] pointer-events-none">
+                </div>
+
+                <div class="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
+                    <div class="lg:col-span-7 flex flex-col justify-center text-center lg:text-left">
+                        <div class="flex flex-wrap gap-3 justify-center lg:justify-start mb-6">
+                            <span
+                                class="inline-flex items-center gap-1.5 bg-brand-teal/10 border border-brand-teal/20 text-teal-700 py-1.5 px-4 rounded-full text-xs font-semibold">
+                                <i class="fas fa-heart"></i> +2 Mascotas a Salvo
+                            </span>
+                            <span
+                                class="inline-flex items-center gap-1.5 bg-orange-500/10 border border-orange-500/20 text-orange-700 py-1.5 px-4 rounded-full text-xs font-semibold">
+                                <i class="fas fa-star"></i> Comunidad Activa
+                            </span>
+                        </div>
+                        <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-brand-dark leading-tight mb-6">
+                            Cuidamos y protegemos a tu <br class="hidden md:inline" />
+                            <span class="text-brand-teal relative inline-block font-Fredoka">mejor amigo</span>
+                        </h1>
+                        <p class="text-slate-600 text-lg md:text-xl max-w-[540px] mx-auto lg:mx-0 mb-8 leading-relaxed">
+                            UYWA es la herramienta inteligente que conecta a amantes de los animales con tecnología para
+                            salvar vidas. Reporta pérdidas, gestiona adopciones responsables y ayuda en tu comunidad.
+                        </p>
+                        <div class="flex flex-wrap gap-4 justify-center lg:justify-start">
+                            <a href="#"
+                                class="btn-primary flex items-center gap-2 bg-gradient-to-r from-brand-teal to-brand-tealHover text-white font-bold py-3.5 px-8 rounded-full btn-glow-teal hover:scale-105 transition-all duration-300"
+                                onclick="openComingSoonModal(event)">
+                                <i class="fab fa-apple text-xl"></i> App Store
+                            </a>
+                            <a href="#"
+                                class="btn-primary flex items-center gap-2 bg-gradient-to-r from-brand-teal to-brand-tealHover text-white font-bold py-3.5 px-8 rounded-full btn-glow-teal hover:scale-105 transition-all duration-300"
+                                onclick="openComingSoonModal(event)">
+                                <i class="fab fa-google-play text-lg"></i> Google Play
+                            </a>
+                            <a href="#simulador"
+                                class="inline-flex items-center gap-2 border-2 border-slate-300 hover:border-brand-teal text-slate-700 hover:text-brand-teal font-bold py-3.5 px-8 rounded-full hover:bg-brand-teal/5 transition-all duration-300">
+                                <i class="fas fa-play"></i> Probar Demo
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-5 flex justify-center items-center w-full">
+                        <div class="slider-container w-full max-w-[420px] aspect-[4/5] relative" id="heroSlider">
+                            <!-- Badge de pausa al hacer hover -->
+                            <div class="slider-pause-badge">
+                                <i class="fas fa-pause-circle text-[8px]"></i> Pausado
+                            </div>
+
+                            <!-- Slide 1 -->
+                            <div class="hero-slide active" id="slide-dog" data-index="0">
+                                <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?auto=format&fit=crop&q=80&w=800"
+                                    alt="Perrito feliz" class="w-full h-full object-cover rounded-[32px]" />
+                                <div class="slide-overlay rounded-[32px]"></div>
+                                <div class="absolute bottom-6 left-6 z-30 text-white">
+                                    <h3 class="text-xl font-bold">Toby</h3>
+                                    <p class="text-sm text-slate-200">Reencontrado a 200m</p>
+                                </div>
+                            </div>
+
+                            <!-- Slide 2 -->
+                            <div class="hero-slide" id="slide-cat" data-index="1">
+                                <img src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=800"
+                                    alt="Gatito tierno" class="w-full h-full object-cover rounded-[32px]" />
+                                <div class="slide-overlay rounded-[32px]"></div>
+                                <div class="absolute bottom-6 left-6 z-30 text-white">
+                                    <h3 class="text-xl font-bold">Milo</h3>
+                                    <p class="text-sm text-slate-200">Buscando un hogar feliz</p>
+                                </div>
+                            </div>
+
+                            <!-- Dots de navegación -->
+                            <div class="slider-dots" id="sliderDots">
+                                <button class="slider-dot active" data-slide="0" aria-label="Slide 1"></button>
+                                <button class="slider-dot" data-slide="1" aria-label="Slide 2"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== CARACTERÍSTICAS ===== -->
+            <section class="features py-24 bg-white" id="features">
+                <div class="container mx-auto px-6">
+                    <div class="section-header text-center max-w-[620px] mx-auto mb-16 reveal">
+                        <span
+                            class="inline-flex items-center gap-1.5 bg-gradient-to-r from-brand-teal/10 to-orange-500/10 border border-brand-teal/20 text-teal-800 py-1.5 px-5 rounded-full text-xs font-semibold mb-3">
+                            <i class="fas fa-star"></i> Características Únicas
+                        </span>
+                        <h2 class="text-3xl md:text-4xl font-extrabold text-brand-dark mb-4">¿Por qué elegir <span class="shimmer-text">UYWA</span>?</h2>
+                        <p class="text-slate-600">Nuestra tecnología se adapta a tus necesidades y a las del bienestar
+                            de tus mascotas de forma inteligente.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Card 1 -->
+                        <div
+                            class="feature-card bg-brand-lightBg p-8 rounded-3xl border border-brand-border hover:border-brand-teal/50 hover:shadow-xl transition-all duration-300 reveal">
+                            <div
+                                class="w-14 h-14 rounded-2xl bg-teal-500/10 flex items-center justify-center text-brand-teal text-2xl mb-6">
+                                <i class="fas fa-map-marked-alt"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-brand-dark mb-2 font-Fredoka">Mapa Interactivo</h3>
+                            <p class="text-slate-600">Alertas localizadas en tiempo real para que asistas de inmediato a
+                                animales extraviados a pocos metros.</p>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="feature-card bg-brand-lightBg p-8 rounded-3xl border border-brand-border hover:border-brand-teal/50 hover:shadow-xl transition-all duration-300 reveal"
+                            style="transition-delay: 100ms;">
+                            <div
+                                class="w-14 h-14 rounded-2xl bg-orange-500/10 flex items-center justify-center text-brand-orange text-2xl mb-6">
+                                <i class="fas fa-hand-holding-heart"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-brand-dark mb-2 font-Fredoka">Adopción Transparente</h3>
+                            <p class="text-slate-600">Conecta con refugios verificados y familias de confianza sin
+                                riesgo a fraudes o malas prácticas.</p>
+                        </div>
+
+                        <!-- Card 3 -->
+                        <div class="feature-card bg-brand-lightBg p-8 rounded-3xl border border-brand-border hover:border-brand-teal/50 hover:shadow-xl transition-all duration-300 reveal"
+                            style="transition-delay: 200ms;">
+                            <div
+                                class="w-14 h-14 rounded-2xl bg-teal-500/10 flex items-center justify-center text-brand-teal text-2xl mb-6">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-brand-dark mb-2 font-Fredoka">Alertas S.O.S</h3>
+                            <p class="text-slate-600">Si tu mascota se escapa, notifica al instante a toda la red
+                                comunitaria en un radio de acción cercano.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== CAPTURAS DE PANTALLA Y FUNCIONALIDAD MEJORADA ===== -->
+            <section class="py-24 bg-brand-lightBg from-white via-teal-50/20 to-white relative overflow-hidden"
+                id="capturas">
+                <!-- Elementos decorativos de fondo -->
+                <div
+                    class="absolute w-[400px] h-[400px] bg-brand-teal/5 rounded-full blur-[100px] top-10 left-[-150px] pointer-events-none">
+                </div>
+                <div
+                    class="absolute w-[300px] h-[300px] bg-brand-orange/5 rounded-full blur-[80px] bottom-10 right-[-100px] pointer-events-none">
+                </div>
+
+                <div class="container mx-auto px-6 relative z-10">
+                    <div class="section-header text-center max-w-[620px] mx-auto mb-16 reveal">
+                        <span
+                            class="inline-flex items-center gap-1.5 bg-gradient-to-r from-brand-teal/10 to-orange-500/10 border border-brand-teal/20 text-teal-800 py-1.5 px-5 rounded-full text-xs font-semibold mb-3">
+                            <i class="fas fa-mobile-alt"></i> Funcionalidades Clave
+                        </span>
+                        <h2 class="text-3xl md:text-4xl font-extrabold text-brand-dark mb-4">
+                            Explora la <span class="shimmer-text">App en Acción</span>
+                        </h2>
+                        <p class="text-slate-600">Interfaces diseñadas para conectar, proteger y celebrar la vida de
+                            tus mascotas. Desliza para descubrir cada funcionalidad.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+                        <!-- Card 1: Feed de Noticias (WA0022) -->
+                        <div
+                            class="feature-screenshot-card bg-white rounded-[32px] p-4 sm:p-5 border border-brand-border hover:border-purple-300/60 hover:shadow-2xl hover:shadow-purple-500/10 transition-all duration-500 reveal flex flex-col items-center gradient-border-card">
+                            <div class="phone-frame w-full aspect-[9/16] max-w-[220px] bg-slate-950 rounded-[28px] p-2.5 relative shadow-xl shadow-slate-900/20 overflow-hidden mb-5 cursor-pointer"
+                                onclick="openScreenshotPreview('IMG-20260626-WA0027.jpg/IMG-20260626-WA0022.jpg', 'Feed de la Comunidad', 'Visualiza todas las publicaciones, historias y novedades de la comunidad UYWA en tiempo real.')">
+                                <div class="feature-phone-glare"></div>
+                                <img loading="lazy" src="IMG-20260626-WA0027.jpg/IMG-20260626-WA0022.jpg"
+                                    alt="Feed de Noticias - Publicaciones de usuarios"
+                                    class="w-full h-full object-cover rounded-[20px]"
+                                    onerror="this.src='https://placehold.co/400x700/7C3AED/ffffff?text=Feed'" />
+                                <div class="feature-overlay rounded-[20px]"></div>
+                                <div
+                                    class="feature-hover-content absolute bottom-0 left-0 right-0 p-4 z-10 flex flex-col gap-1.5">
+                                    <span
+                                        class="inline-flex items-center gap-1 text-white text-[10px] font-bold bg-white/20 backdrop-blur-md rounded-full px-3 py-1 w-fit">
+                                        <i class="fas fa-search-plus text-[8px]"></i> Ampliar vista
+                                    </span>
+                                </div>
+                                <!-- Indicador de scroll -->
+                                <div
+                                    class="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-1.5 bg-slate-700/50 rounded-full">
+                                </div>
+                            </div>
+                            <div
+                                class="feature-icon-ring w-12 h-12 rounded-2xl bg-purple-100 flex items-center justify-center text-purple-600 text-xl mb-3 shrink-0">
+                                <i class="fas fa-rss"></i>
+                            </div>
+                            <h4 class="font-bold text-brand-dark text-lg mb-1 font-Fredoka text-center">Feed de la
+                                Comunidad</h4>
+                            <p class="text-slate-500 text-xs text-center leading-relaxed px-1">Visualiza todas las
+                                publicaciones, historias y novedades de la comunidad UYWA en tiempo real.</p>
+                            <div class="flex gap-1.5 mt-3">
+                                <span
+                                    class="bg-purple-100 text-purple-700 text-[9px] font-semibold px-2.5 py-1 rounded-full">Social</span>
+                                <span
+                                    class="bg-purple-100 text-purple-700 text-[9px] font-semibold px-2.5 py-1 rounded-full">Tiempo
+                                    Real</span>
+                            </div>
+                        </div>
+
+                        <!-- Card 2: Mapa Interactivo (WA0023) -->
+                        <div class="feature-screenshot-card bg-white rounded-[32px] p-4 sm:p-5 border border-brand-border hover:border-orange-300/60 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 reveal flex flex-col items-center gradient-border-card"
+                            style="transition-delay: 100ms;">
+                            <div class="phone-frame w-full aspect-[9/16] max-w-[220px] bg-slate-950 rounded-[28px] p-2.5 relative shadow-xl shadow-slate-900/20 overflow-hidden mb-5 cursor-pointer"
+                                onclick="openScreenshotPreview('IMG-20260626-WA0027.jpg/IMG-20260626-WA0023.jpg', 'Mapa Interactivo', 'Busca mascotas cercanas, activa alertas georreferenciadas y encuentra animales extraviados al instante.')">
+                                <div class="feature-phone-glare"></div>
+                                <img loading="lazy" src="IMG-20260626-WA0027.jpg/IMG-20260626-WA0023.jpg"
+                                    alt="Mapa Interactivo - Buscar mascotas"
+                                    class="w-full h-full object-cover rounded-[20px]"
+                                    onerror="this.src='https://placehold.co/400x700/FF9F1C/ffffff?text=Mapa'" />
+                                <div class="feature-overlay rounded-[20px]"></div>
+                                <div
+                                    class="feature-hover-content absolute bottom-0 left-0 right-0 p-4 z-10 flex flex-col gap-1.5">
+                                    <span
+                                        class="inline-flex items-center gap-1 text-white text-[10px] font-bold bg-white/20 backdrop-blur-md rounded-full px-3 py-1 w-fit">
+                                        <i class="fas fa-search-plus text-[8px]"></i> Ampliar vista
+                                    </span>
+                                </div>
+                                <div
+                                    class="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-1.5 bg-slate-700/50 rounded-full">
+                                </div>
+                            </div>
+                            <div
+                                class="feature-icon-ring w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center text-orange-600 text-xl mb-3 shrink-0">
+                                <i class="fas fa-map-marked-alt"></i>
+                            </div>
+                            <h4 class="font-bold text-brand-dark text-lg mb-1 font-Fredoka text-center">Mapa Interactivo
+                            </h4>
+                            <p class="text-slate-500 text-xs text-center leading-relaxed px-1">Busca mascotas cercanas,
+                                activa alertas georreferenciadas y encuentra animales extraviados al instante.</p>
+                            <div class="flex gap-1.5 mt-3">
+                                <span
+                                    class="bg-orange-100 text-orange-700 text-[9px] font-semibold px-2.5 py-1 rounded-full">GPS</span>
+                                <span
+                                    class="bg-orange-100 text-orange-700 text-[9px] font-semibold px-2.5 py-1 rounded-full">Tiempo
+                                    Real</span>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Insignias y Logros (WA0024) -->
+                        <div class="feature-screenshot-card bg-white rounded-[32px] p-4 sm:p-5 border border-brand-border hover:border-yellow-300/60 hover:shadow-2xl hover:shadow-yellow-500/10 transition-all duration-500 reveal flex flex-col items-center gradient-border-card"
+                            style="transition-delay: 200ms;">
+                            <div class="phone-frame w-full aspect-[9/16] max-w-[220px] bg-slate-950 rounded-[28px] p-2.5 relative shadow-xl shadow-slate-900/20 overflow-hidden mb-5 cursor-pointer"
+                                onclick="openScreenshotPreview('IMG-20260626-WA0027.jpg/IMG-20260626-WA0024.jpg', 'Mis Insignias', 'Colecciona logros y distinciones que reflejan tu compromiso e interactividad dentro de la comunidad.')">
+                                <div class="feature-phone-glare"></div>
+                                <img loading="lazy" src="IMG-20260626-WA0027.jpg/IMG-20260626-WA0024.jpg"
+                                    alt="Insignias y Logros" class="w-full h-full object-cover rounded-[20px]"
+                                    onerror="this.src='https://placehold.co/400x700/EAB308/ffffff?text=Insignias'" />
+                                <div class="feature-overlay rounded-[20px]"></div>
+                                <div
+                                    class="feature-hover-content absolute bottom-0 left-0 right-0 p-4 z-10 flex flex-col gap-1.5">
+                                    <span
+                                        class="inline-flex items-center gap-1 text-white text-[10px] font-bold bg-white/20 backdrop-blur-md rounded-full px-3 py-1 w-fit">
+                                        <i class="fas fa-search-plus text-[8px]"></i> Ampliar vista
+                                    </span>
+                                </div>
+                                <div
+                                    class="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-1.5 bg-slate-700/50 rounded-full">
+                                </div>
+                            </div>
+                            <div
+                                class="feature-icon-ring w-12 h-12 rounded-2xl bg-yellow-100 flex items-center justify-center text-yellow-600 text-xl mb-3 shrink-0">
+                                <i class="fas fa-trophy"></i>
+                            </div>
+                            <h4 class="font-bold text-brand-dark text-lg mb-1 font-Fredoka text-center">Mis Insignias
+                            </h4>
+                            <p class="text-slate-500 text-xs text-center leading-relaxed px-1">Colecciona logros y
+                                distinciones que reflejan tu compromiso e interactividad dentro de la comunidad.</p>
+                            <div class="flex gap-1.5 mt-3">
+                                <span
+                                    class="bg-yellow-100 text-yellow-700 text-[9px] font-semibold px-2.5 py-1 rounded-full">Logros</span>
+                                <span
+                                    class="bg-yellow-100 text-yellow-700 text-[9px] font-semibold px-2.5 py-1 rounded-full">Ranking</span>
+                            </div>
+                        </div>
+
+                        <!-- Card 4: Mis Mascotas y Publicaciones (WA0025) -->
+                        <div class="feature-screenshot-card bg-white rounded-[32px] p-4 sm:p-5 border border-brand-border hover:border-emerald-300/60 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 reveal flex flex-col items-center gradient-border-card"
+                            style="transition-delay: 300ms;">
+                            <div class="phone-frame w-full aspect-[9/16] max-w-[220px] bg-slate-950 rounded-[28px] p-2.5 relative shadow-xl shadow-slate-900/20 overflow-hidden mb-5 cursor-pointer"
+                                onclick="openScreenshotPreview('IMG-20260626-WA0027.jpg/IMG-20260626-WA0025.jpg', 'Mis Mascotas', 'Gestiona tus mascotas, publicaciones y reportes desde un solo lugar. Todo el historial de tu comunidad.')">
+                                <div class="feature-phone-glare"></div>
+                                <img loading="lazy" src="IMG-20260626-WA0027.jpg/IMG-20260626-WA0025.jpg"
+                                    alt="Mis Mascotas y Publicaciones" class="w-full h-full object-cover rounded-[20px]"
+                                    onerror="this.src='https://placehold.co/400x700/10B981/ffffff?text=Mascotas'" />
+                                <div class="feature-overlay rounded-[20px]"></div>
+                                <div
+                                    class="feature-hover-content absolute bottom-0 left-0 right-0 p-4 z-10 flex flex-col gap-1.5">
+                                    <span
+                                        class="inline-flex items-center gap-1 text-white text-[10px] font-bold bg-white/20 backdrop-blur-md rounded-full px-3 py-1 w-fit">
+                                        <i class="fas fa-search-plus text-[8px]"></i> Ampliar vista
+                                    </span>
+                                </div>
+                                <div
+                                    class="absolute top-3 left-1/2 -translate-x-1/2 w-20 h-1.5 bg-slate-700/50 rounded-full">
+                                </div>
+                            </div>
+                            <div
+                                class="feature-icon-ring w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center text-emerald-600 text-xl mb-3 shrink-0">
+                                <i class="fas fa-paw"></i>
+                            </div>
+                            <h4 class="font-bold text-brand-dark text-lg mb-1 font-Fredoka text-center">Mis Mascotas
+                            </h4>
+                            <p class="text-slate-500 text-xs text-center leading-relaxed px-1">Gestiona tus mascotas,
+                                publicaciones y reportes desde un solo lugar. Todo el historial de tu comunidad.</p>
+                            <div class="flex gap-1.5 mt-3">
+                                <span
+                                    class="bg-emerald-100 text-emerald-700 text-[9px] font-semibold px-2.5 py-1 rounded-full">Perfil</span>
+                                <span
+                                    class="bg-emerald-100 text-emerald-700 text-[9px] font-semibold px-2.5 py-1 rounded-full">Historial</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Indicador interactivo de funcionalidades -->
+                    <div class="flex justify-center gap-3 mt-12 reveal">
+                        <div class="flex items-center gap-2 text-slate-400 text-xs">
+                            <span class="w-2 h-2 rounded-full bg-purple-500 active-feature-indicator"></span>
+                            <span>Feed</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-400 text-xs">
+                            <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                            <span>Mapa</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-400 text-xs">
+                            <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                            <span>Insignias</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-slate-400 text-xs">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span>Mascotas</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== SECCIÓN ESTADOS ===== -->
+            <section class="status-section py-24 bg-white border-t border-b border-brand-border" id="status">
+                <div class="container mx-auto px-6">
+                    <div class="section-header text-center max-w-[620px] mx-auto mb-16 reveal">
+                        <span
+                            class="inline-flex items-center gap-1.5 bg-gradient-to-r from-brand-teal/10 to-orange-500/10 border border-brand-teal/20 text-teal-800 py-1.5 px-5 rounded-full text-xs font-semibold mb-3">
+                            <i class="fas fa-tags"></i> Herramientas de Moderación
+                        </span>
+                        <h2 class="text-3xl md:text-4xl font-extrabold text-brand-dark mb-4">Clasificación <span class="shimmer-text">precisa</span></h2>
+                        <p class="text-slate-600">Cada mascota cuenta con un estado específico dentro de nuestra
+                            plataforma para facilitar las labores de rescate.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+                        <div
+                            class="status-item bg-white p-6 rounded-3xl border border-brand-border text-center hover:shadow-xl transition-all duration-300 reveal">
+                            <div class="text-brand-orange text-3xl mb-4"><i class="fas fa-exclamation-circle"></i></div>
+                            <h4 class="text-lg font-bold text-brand-dark mb-1 font-Fredoka">Perdida</h4>
+                            <p class="text-slate-500 text-xs">Urgente — Alertas prioritarias a toda la comunidad
+                                vecinal.</p>
+                        </div>
+
+                        <div class="status-item bg-white p-6 rounded-3xl border border-brand-border text-center hover:shadow-xl transition-all duration-300 reveal"
+                            style="transition-delay: 100ms;">
+                            <div class="text-brand-teal text-3xl mb-4"><i class="fas fa-check-circle"></i></div>
+                            <h4 class="text-lg font-bold text-brand-dark mb-1 font-Fredoka">Encontrada</h4>
+                            <p class="text-slate-500 text-xs">¡A salvo! Listos para contactar de inmediato con sus
+                                legítimos dueños.</p>
+                        </div>
+
+                        <div class="status-item bg-white p-6 rounded-3xl border border-brand-border text-center hover:shadow-xl transition-all duration-300 reveal"
+                            style="transition-delay: 200ms;">
+                            <div class="text-yellow-500 text-3xl mb-4"><i class="fas fa-home"></i></div>
+                            <h4 class="text-lg font-bold text-brand-dark mb-1 font-Fredoka">En Adopción</h4>
+                            <p class="text-slate-500 text-xs">Búsqueda de familias que asuman el compromiso de tenencia
+                                responsable.</p>
+                        </div>
+
+                        <div class="status-item bg-white p-6 rounded-3xl border border-brand-border text-center hover:shadow-xl transition-all duration-300 reveal"
+                            style="transition-delay: 300ms;">
+                            <div class="text-purple-500 text-3xl mb-4"><i class="fas fa-shield-alt"></i></div>
+                            <h4 class="text-lg font-bold text-brand-dark mb-1 font-Fredoka">Rescatada</h4>
+                            <p class="text-slate-500 text-xs">Atendida por médicos y en proceso de rehabilitación de
+                                salud integral.</p>
+                        </div>
+
+                        <div class="status-item bg-white p-6 rounded-3xl border border-brand-border text-center hover:shadow-xl transition-all duration-300 reveal"
+                            style="transition-delay: 400ms;">
+                            <div class="text-emerald-500 text-3xl mb-4"><i class="fas fa-heart"></i></div>
+                            <h4 class="text-lg font-bold text-brand-dark mb-1 font-Fredoka">Adoptada</h4>
+                            <p class="text-slate-500 text-xs">¡Caso de Éxito! Finales felices que nos impulsan a seguir
+                                adelante.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== SECCIÓN TESTIMONIOS ===== -->
+            <section class="testimonials-section py-24 bg-brand-lightBg" id="testimonios">
+                <div class="container mx-auto px-6">
+                    <div class="section-header text-center max-w-[620px] mx-auto mb-16 reveal">
+                        <span
+                            class="inline-flex items-center gap-1.5 bg-gradient-to-r from-brand-teal/10 to-orange-500/10 border border-brand-teal/20 text-teal-800 py-1.5 px-5 rounded-full text-xs font-semibold mb-3">
+                            <i class="fas fa-heart"></i> Comunidad Satisfecha
+                        </span>
+                        <h2 class="text-3xl md:text-4xl font-extrabold text-brand-dark mb-4">Unidos por el <span class="shimmer-text">bienestar</span>
+                        </h2>
+                        <p class="text-slate-600">Historias sinceras de familias que han vuelto a abrazar a sus mejores
+                            amigos.</p>
+                    </div>
+
+                    <div
+                        class="max-w-[760px] mx-auto bg-white border border-brand-border p-8 md:p-12 rounded-[32px] shadow-lg relative reveal">
+                        <div class="testi-slide active animate-fade" id="testi-0">
+                            <div class="flex text-yellow-400 gap-1 mb-6 text-lg justify-center">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                                    class="fas fa-star"></i><i class="fas fa-star"></i>
+                            </div>
+                            <p class="text-slate-700 italic text-lg md:text-xl text-center leading-relaxed mb-8">
+                                "Estaba sumamente preocupada cuando Milo se escapó. Gracias al mapa de alertas de UYWA,
+                                un vecino de la cuadra me contactó a los pocos minutos indicando que lo tenía a buen
+                                recaudo. ¡La app funciona de maravilla!"
+                            </p>
+                            <div class="flex items-center gap-4 justify-center">
+                                <img src="https://picsum.photos/200/300?random=1"
+                                    alt="María R."
+                                    class="w-14 h-14 rounded-full object-cover border-2 border-brand-teal" />
+                                <div class="text-left">
+                                    <h4 class="font-bold text-brand-dark font-Fredoka">María R. y Milo 🐶</h4>
+                                    <p class="text-slate-400 text-xs">La Paz, Bolivia</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="testi-slide hidden animate-fade" id="testi-1">
+                            <div class="flex text-yellow-400 gap-1 mb-6 text-lg justify-center">
+                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                                    class="fas fa-star"></i><i class="fas fa-star"></i>
+                            </div>
+                            <p class="text-slate-700 italic text-lg md:text-xl text-center leading-relaxed mb-8">
+                                "Adoptar a Luna mediante UYWA fue un proceso ágil, verificado y súper humano. Hoy en día
+                                Luna alegra todas nuestras mañanas. Les recomiendo probar la app para darle segundas
+                                oportunidades a estos animalitos."
+                            </p>
+                            <div class="flex items-center gap-4 justify-center">
+                                <img src="https://picsum.photos/200/300?random=2"
+                                    alt="Carlos P."
+                                    class="w-14 h-14 rounded-full object-cover border-2 border-brand-teal" />
+                                <div class="text-left">
+                                    <h4 class="font-bold text-brand-dark font-Fredoka">Carlos P. y Luna 🐱</h4>
+                                    <p class="text-slate-400 text-xs">La Paz, Bolivia</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4 justify-center mt-10">
+                            <button onclick="slideTestimonials(-1)"
+                                class="w-11 h-11 rounded-full border border-brand-border hover:border-brand-teal hover:bg-brand-teal/5 flex items-center justify-center text-slate-600 hover:text-brand-teal transition-all">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button onclick="slideTestimonials(1)"
+                                class="w-11 h-11 rounded-full border border-brand-border hover:border-brand-teal hover:bg-brand-teal/5 flex items-center justify-center text-slate-600 hover:text-brand-teal transition-all">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== SECCIÓN CTA ===== -->
+            <section class="py-24 bg-white relative overflow-hidden" id="download">
+                <div class="container mx-auto px-6 relative z-10">
+                    <div
+                        class="bg-gradient-to-br from-brand-teal/5 via-brand-lightBg to-orange-500/5 border border-brand-border p-10 md:p-16 rounded-[40px] text-center max-w-[1100px] mx-auto reveal">
+                        <h2 class="text-3xl md:text-4xl lg:text-5xl font-extrabold text-brand-dark mb-6">¿Listo para
+                            <span class="shimmer-text">cuidar de ellos</span>?</h2>
+                        <p class="text-slate-600 text-lg max-w-[580px] mx-auto mb-10 leading-relaxed">
+                            Descarga UYWA de manera completamente gratuita y sé el héroe que las mascotas de tu
+                            vecindario necesitan.
+                        </p>
+
+                        <div class="flex flex-wrap gap-4 justify-center mb-16">
+                            <a href="#"
+                                class="btn-primary flex items-center gap-2.5 bg-gradient-to-r from-brand-teal to-brand-tealHover text-white font-bold py-4 px-8 rounded-full btn-glow-teal hover:scale-105 transition-all duration-300"
+                                onclick="openComingSoonModal(event)">
+                                <i class="fab fa-apple text-xl"></i> App Store
+                            </a>
+                            <a href="#"
+                                class="btn-primary flex items-center gap-2.5 bg-gradient-to-r from-brand-teal to-brand-tealHover text-white font-bold py-4 px-8 rounded-full btn-glow-teal hover:scale-105 transition-all duration-300"
+                                onclick="openComingSoonModal(event)">
+                                <i class="fab fa-google-play text-lg"></i> Google Play
+                            </a>
+                            <a href="#"
+                                class="inline-flex items-center gap-2.5 border-2 border-slate-300 text-slate-700 hover:text-brand-teal hover:border-brand-teal font-bold py-4 px-8 rounded-full transition-all duration-300"
+                                onclick="openQrModal(event)">
+                                <i class="fas fa-qrcode"></i> Escanear QR
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- ==================== VISTA: GUÍA DE ADOPCIÓN ==================== -->
+        <div id="view-guia-adopcion" class="view-container">
+            <section class="py-16 bg-gradient-to-b from-teal-50 to-white">
+                <div class="container mx-auto px-6">
+                    <div class="max-w-[800px] mx-auto text-center mb-16">
+                        <span
+                            class="inline-flex items-center gap-1.5 bg-brand-teal/15 text-teal-700 py-1.5 px-4 rounded-full text-xs font-semibold mb-4">
+                            <i class="fas fa-book-open"></i> Guía del Adoptante Responsable
+                        </span>
+                        <h1 class="text-4xl md:text-5xl font-extrabold text-brand-dark mb-4">Dale una segunda
+                            oportunidad</h1>
+                        <p class="text-slate-600 text-lg">La adopción es un compromiso de por vida. Hemos estructurado
+                            estos consejos y checklists interactivos para prepararte antes de darle la bienvenida a tu
+                            nuevo amigo peludo.</p>
+                    </div>
+
+                    <!-- Steps Timeline -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-16">
+                        <div class="bg-brand-lightBg p-6 rounded-3xl border border-brand-border text-center relative">
+                            <div
+                                class="w-12 h-12 rounded-full bg-brand-teal text-white flex items-center justify-center font-bold text-xl mx-auto mb-4">
+                                1</div>
+                            <h3 class="font-bold text-lg mb-2 text-brand-dark">La Decisión</h3>
+                            <p class="text-slate-500 text-xs">Evalúa tu presupuesto, tiempo disponible y espacio en el
+                                hogar.</p>
+                        </div>
+                        <div class="bg-brand-lightBg p-6 rounded-3xl border border-brand-border text-center relative">
+                            <div
+                                class="w-12 h-12 rounded-full bg-brand-teal text-white flex items-center justify-center font-bold text-xl mx-auto mb-4">
+                                2</div>
+                            <h3 class="font-bold text-lg mb-2 text-brand-dark">La Búsqueda</h3>
+                            <p class="text-slate-500 text-xs">Explora el catálogo en UYWA y asiste a ferias vecinales
+                                autorizadas.</p>
+                        </div>
+                        <div class="bg-brand-lightBg p-6 rounded-3xl border border-brand-border text-center relative">
+                            <div
+                                class="w-12 h-12 rounded-full bg-brand-teal text-white flex items-center justify-center font-bold text-xl mx-auto mb-4">
+                                3</div>
+                            <h3 class="font-bold text-lg mb-2 text-brand-dark">La Entrevista</h3>
+                            <p class="text-slate-500 text-xs">Completa los filtros de seguridad y coordina visitas de
+                                acoplamiento.</p>
+                        </div>
+                        <div class="bg-brand-lightBg p-6 rounded-3xl border border-brand-border text-center relative">
+                            <div
+                                class="w-12 h-12 rounded-full bg-brand-teal text-white flex items-center justify-center font-bold text-xl mx-auto mb-4">
+                                4</div>
+                            <h3 class="font-bold text-lg mb-2 text-brand-dark">Bienvenida</h3>
+                            <p class="text-slate-500 text-xs">Prepara su camita, platos y permite que explore la casa a
+                                su propio ritmo.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+                        <!-- Checklist Interactivo (Left) -->
+                        <div class="lg:col-span-6 bg-white p-8 rounded-[32px] border border-brand-border shadow-md">
+                            <h3 class="text-2xl font-bold text-brand-dark mb-4 font-Fredoka"><i
+                                    class="fas fa-tasks text-brand-teal"></i> ¿Estás listo? Checklist Interactivo</h3>
+                            <p class="text-slate-500 text-sm mb-6">Marca las casillas que cumples actualmente para ver
+                                tu nivel de preparación.</p>
+
+                            <div class="flex flex-col gap-4" id="adoptionChecklist">
+                                <label
+                                    class="flex items-start gap-3.5 p-3 rounded-2xl bg-brand-lightBg border border-slate-100 cursor-pointer transition-colors hover:bg-slate-50">
+                                    <input type="checkbox"
+                                        class="w-5 h-5 rounded text-brand-teal border-slate-300 focus:ring-brand-teal mt-0.5"
+                                        onchange="updateAdoptionScore()">
+                                    <div class="text-xs text-slate-700">Tengo espacio suficiente en casa para el tamaño
+                                        de la mascota elegida.</div>
+                                </label>
+                                <label
+                                    class="flex items-start gap-3.5 p-3 rounded-2xl bg-brand-lightBg border border-slate-100 cursor-pointer transition-colors hover:bg-slate-50">
+                                    <input type="checkbox"
+                                        class="w-5 h-5 rounded text-brand-teal border-slate-300 focus:ring-brand-teal mt-0.5"
+                                        onchange="updateAdoptionScore()">
+                                    <div class="text-xs text-slate-700">Dispongo de al menos 1 hora diaria para paseos,
+                                        juegos y estimulación.</div>
+                                </label>
+                                <label
+                                    class="flex items-start gap-3.5 p-3 rounded-2xl bg-brand-lightBg border border-slate-100 cursor-pointer transition-colors hover:bg-slate-50">
+                                    <input type="checkbox"
+                                        class="w-5 h-5 rounded text-brand-teal border-slate-300 focus:ring-brand-teal mt-0.5"
+                                        onchange="updateAdoptionScore()">
+                                    <div class="text-xs text-slate-700">Cuento con solvencia económica para vacunas,
+                                        alimento premium y emergencias veterinarias.</div>
+                                </label>
+                                <label
+                                    class="flex items-start gap-3.5 p-3 rounded-2xl bg-brand-lightBg border border-slate-100 cursor-pointer transition-colors hover:bg-slate-50">
+                                    <input type="checkbox"
+                                        class="w-5 h-5 rounded text-brand-teal border-slate-300 focus:ring-brand-teal mt-0.5"
+                                        onchange="updateAdoptionScore()">
+                                    <div class="text-xs text-slate-700">Toda mi familia está de acuerdo y entusiasmada
+                                        con la llegada del nuevo integrante.</div>
+                                </label>
+                                <label
+                                    class="flex items-start gap-3.5 p-3 rounded-2xl bg-brand-lightBg border border-slate-100 cursor-pointer transition-colors hover:bg-slate-50">
+                                    <input type="checkbox"
+                                        class="w-5 h-5 rounded text-brand-teal border-slate-300 focus:ring-brand-teal mt-0.5"
+                                        onchange="updateAdoptionScore()">
+                                    <div class="text-xs text-slate-700">Sé que un cachorro puede morder cosas y un gato
+                                        puede arañar muebles; seré paciente y comprensivo.</div>
+                                </label>
+                            </div>
+
+                            <div class="mt-8 pt-6 border-t border-brand-border flex items-center justify-between">
+                                <span class="text-xs font-bold text-slate-500">Puntaje de Listo:</span>
+                                <span class="bg-brand-teal/20 text-teal-800 text-xs font-bold px-3 py-1 rounded-full"
+                                    id="checklistScore">0 / 5 Cumplidos</span>
+                            </div>
+                        </div>
+
+                        <!-- Consejos Utiles (Right) -->
+                        <div class="lg:col-span-6 flex flex-col gap-6">
+                            <div class="bg-orange-500/10 border border-orange-500/20 p-6 rounded-3xl flex gap-4">
+                                <span class="text-2xl mt-1">⚠️</span>
+                                <div>
+                                    <h4 class="font-bold text-brand-dark text-lg font-Fredoka mb-1">Evita compras
+                                        impulsivas</h4>
+                                    <p class="text-slate-600 text-xs leading-relaxed">Comprar animales alimenta
+                                        criaderos ilegales donde explotan a las madres. Al adoptar, liberas un espacio
+                                        en refugios para rescatar a otra vida en la calle.</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-6 rounded-3xl border border-brand-border">
+                                <h4 class="font-bold text-brand-dark text-lg font-Fredoka mb-4">Requisitos mínimos
+                                    legales en Bolivia</h4>
+                                <ul class="flex flex-col gap-3 text-xs text-slate-600 list-disc list-inside">
+                                    <li>Ser mayor de edad y presentar Cédula de Identidad (CI) original.</li>
+                                    <li>Presentar factura de Luz o Agua que verifique el domicilio real.</li>
+                                    <li>Firma del documento de compromiso de no abandono y tenencia responsable (Ley
+                                        700).</li>
+                                    <li>Aceptar visitas periódicas de seguimiento de bienestar por parte del refugio.
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ==================== VISTA: AYUDA / S.O.S ==================== -->
+        <div id="view-ayuda" class="view-container">
+            <section class="py-16 bg-gradient-to-b from-red-50/50 to-white">
+                <div class="container mx-auto px-6">
+                    <div class="max-w-[800px] mx-auto text-center mb-16">
+                        <span
+                            class="inline-flex items-center gap-1.5 bg-red-100 text-red-700 py-1.5 px-4 rounded-full text-xs font-semibold mb-4">
+                            <i class="fas fa-first-aid"></i> Centro de Emergencia S.O.S
+                        </span>
+                        <h1 class="text-4xl md:text-5xl font-extrabold text-brand-dark mb-4">¿Tu mascota se extravió o
+                            requiere auxilio?</h1>
+                        <p class="text-slate-600 text-lg">Actúa con rapidez. Sigue nuestros protocolos de acción
+                            inmediata o busca asistencia médica de urgencia en nuestros refugios y clínicas clínicas
+                            colaboradoras.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
+                        <!-- Protocolo Pérdida -->
+                        <div class="bg-white p-8 rounded-[32px] border border-red-200 shadow-sm relative">
+                            <span
+                                class="absolute top-4 right-4 bg-red-100 text-red-800 text-[10px] px-2 py-0.5 rounded-full font-bold">Protocolo
+                                1</span>
+                            <h3 class="text-2xl font-bold text-brand-dark mb-4 font-Fredoka"><i
+                                    class="fas fa-bullhorn text-red-500"></i> Mi mascota se perdió</h3>
+                            <ul class="flex flex-col gap-4 text-xs text-slate-600">
+                                <li class="flex gap-2.5"><span class="font-bold text-red-500">01.</span> Abre la app
+                                    UYWA, reporta el evento en la pantalla principal e ingresa datos específicos (color,
+                                    nombre, collar).</li>
+                                <li class="flex gap-2.5"><span class="font-bold text-red-500">02.</span> La alerta S.O.S
+                                    emitirá un ping georreferenciado inmediato en el radio de acción de tus vecinos.
+                                </li>
+                                <li class="flex gap-2.5"><span class="font-bold text-red-500">03.</span> Imprime
+                                    carteles digitales generados directamente en la app y pégalos en puntos comerciales
+                                    clave.</li>
+                            </ul>
+                        </div>
+
+                        <!-- Protocolo Encuentro -->
+                        <div class="bg-white p-8 rounded-[32px] border border-teal-200 shadow-sm relative">
+                            <span
+                                class="absolute top-4 right-4 bg-teal-100 text-teal-800 text-[10px] px-2 py-0.5 rounded-full font-bold">Protocolo
+                                2</span>
+                            <h3 class="text-2xl font-bold text-brand-dark mb-4 font-Fredoka"><i
+                                    class="fas fa-hands-helping text-teal-500"></i> Encontré una mascota</h3>
+                            <ul class="flex flex-col gap-4 text-xs text-slate-600">
+                                <li class="flex gap-2.5"><span class="font-bold text-teal-500">01.</span> Resguarda al
+                                    animal en un espacio cerrado y tranquilo. Dale agua fresca de forma prudencial.</li>
+                                <li class="flex gap-2.5"><span class="font-bold text-teal-500">02.</span> Sácale una
+                                    fotografía nítida y publícala como estado "Encontrado" en la red de UYWA.</li>
+                                <li class="flex gap-2.5"><span class="font-bold text-teal-500">03.</span> Llévalo a una
+                                    veterinaria aliada para verificar si porta algún chip o collar con datos legibles.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Buscador de clínicas de emergencia -->
+                    <div class="bg-brand-lightBg rounded-[32px] p-8 border border-brand-border">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+                            <div>
+                                <h3 class="text-2xl font-bold text-brand-dark font-Fredoka">Servicios Veterinarios
+                                    Colaboradores</h3>
+                                <p class="text-slate-500 text-sm">Encuentra auxilio inmediato filtrando clínicas en tu
+                                    departamento.</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="filterVets('all')"
+                                    class="vet-filter-btn active bg-brand-teal text-white text-xs font-bold px-4 py-2 rounded-full transition-colors">Todos</button>
+                                <button onclick="filterVets('lp')"
+                                    class="vet-filter-btn bg-white border border-slate-300 text-slate-700 text-xs font-bold px-4 py-2 rounded-full hover:border-brand-teal transition-colors">La
+                                    Paz</button>
+                                <button onclick="filterVets('sc')"
+                                    class="vet-filter-btn bg-white border border-slate-300 text-slate-700 text-xs font-bold px-4 py-2 rounded-full hover:border-brand-teal transition-colors">Santa
+                                    Cruz</button>
+                                <button onclick="filterVets('cb')"
+                                    class="vet-filter-btn bg-white border border-slate-300 text-slate-700 text-xs font-bold px-4 py-2 rounded-full hover:border-brand-teal transition-colors">Cochabamba</button>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="vetsGrid">
+                            <!-- LP -->
+                            <div class="vet-card bg-white p-6 rounded-2xl border border-brand-border flex flex-col justify-between"
+                                data-city="lp">
+                                <div>
+                                    <span
+                                        class="bg-red-100 text-red-800 text-[9px] font-bold px-2 py-0.5 rounded-full inline-block mb-3">URGENCIAS
+                                        24H</span>
+                                    <h4 class="font-bold text-brand-dark text-lg font-Fredoka mb-1">Clínica El Milagro
+                                    </h4>
+                                    <p class="text-slate-400 text-[11px] mb-3"><i class="fas fa-map-marker-alt"></i>
+                                        Zona Sopocachi, Calle Belisario Salinas, La Paz</p>
+                                    <p class="text-slate-600 text-xs leading-relaxed mb-4">Especialistas en
+                                        traumatología y primeros auxilios. Atención continua los 365 días del año.</p>
+                                </div>
+                                <a href="tel:00000"
+                                    class="w-full text-center bg-brand-teal hover:bg-brand-tealHover text-white text-xs font-bold py-2 rounded-xl block transition-colors"
+                                    onclick="simulatedAction(event, 'Llamando a Clínica El Milagro...')">Llamar de
+                                    Emergencia</a>
+                            </div>
+
+                            <!-- SC -->
+                            <div class="vet-card bg-white p-6 rounded-2xl border border-brand-border flex flex-col justify-between"
+                                data-city="sc">
+                                <div>
+                                    <span
+                                        class="bg-red-100 text-red-800 text-[9px] font-bold px-2 py-0.5 rounded-full inline-block mb-3">URGENCIAS
+                                        24H</span>
+                                    <h4 class="font-bold text-brand-dark text-lg font-Fredoka mb-1">Hospital Animal
+                                        Oriente</h4>
+                                    <p class="text-slate-400 text-[11px] mb-3"><i class="fas fa-map-marker-alt"></i> Av.
+                                        Banzer entre 3er y 4to Anillo, Santa Cruz</p>
+                                    <p class="text-slate-600 text-xs leading-relaxed mb-4">Equipados con terapia
+                                        intensiva, banco de sangre y laboratorios móviles express.</p>
+                                </div>
+                                <a href="tel:00000"
+                                    class="w-full text-center bg-brand-teal hover:bg-brand-tealHover text-white text-xs font-bold py-2 rounded-xl block transition-colors"
+                                    onclick="simulatedAction(event, 'Llamando a Hospital Animal Oriente...')">Llamar de
+                                    Emergencia</a>
+                            </div>
+
+                            <!-- CB -->
+                            <div class="vet-card bg-white p-6 rounded-2xl border border-brand-border flex flex-col justify-between"
+                                data-city="cb">
+                                <div>
+                                    <span
+                                        class="bg-red-100 text-red-800 text-[9px] font-bold px-2 py-0.5 rounded-full inline-block mb-3">URGENCIAS
+                                        24H</span>
+                                    <h4 class="font-bold text-brand-dark text-lg font-Fredoka mb-1">Veterinaria Central
+                                        Cocha</h4>
+                                    <p class="text-slate-400 text-[11px] mb-3"><i class="fas fa-map-marker-alt"></i> Av.
+                                        América Oeste #450, Cochabamba</p>
+                                    <p class="text-slate-600 text-xs leading-relaxed mb-4">Centro especializado en
+                                        rescates animales, desparasitación de urgencia y cirugías.</p>
+                                </div>
+                                <a href="tel:00000"
+                                    class="w-full text-center bg-brand-teal hover:bg-brand-tealHover text-white text-xs font-bold py-2 rounded-xl block transition-colors"
+                                    onclick="simulatedAction(event, 'Llamando a Veterinaria Central Cocha...')">Llamar
+                                    de Emergencia</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ==================== VISTA: PREGUNTAS FRECUENTES (FAQS) ==================== -->
+        <div id="view-faqs" class="view-container">
+            <section class="py-16 bg-white">
+                <div class="container mx-auto px-6">
+                    <div class="max-w-[800px] mx-auto text-center mb-16">
+                        <span
+                            class="inline-block bg-brand-teal/10 border border-brand-teal/20 text-teal-800 py-1 px-4 rounded-full text-xs font-semibold mb-3">
+                            Resuelve tus Dudas
+                        </span>
+                        <h1 class="text-4xl md:text-5xl font-extrabold text-brand-dark mb-4">Preguntas Frecuentes</h1>
+                        <p class="text-slate-600 text-lg">Encuentra respuestas inmediatas a las consultas recurrentes de
+                            nuestra comunidad de cuidado animal.</p>
+                    </div>
+
+                    <div class="max-w-[720px] mx-auto flex flex-col gap-4" id="faqAccordion">
+
+                        <!-- Item 1 -->
+                        <div
+                            class="faq-accordion-item bg-brand-lightBg border border-brand-border rounded-2xl overflow-hidden transition-all duration-300">
+                            <div class="faq-accordion-header p-6 flex justify-between items-center font-bold text-slate-800 font-Fredoka select-none"
+                                onclick="toggleFaq(this)">
+                                <span>¿UYWA cobra comisiones por gestionar adopciones?</span>
+                                <i
+                                    class="fas fa-chevron-down faq-arrow text-brand-teal transition-transform duration-300"></i>
+                            </div>
+                            <div class="faq-accordion-body">
+                                <div class="px-6 pb-6 text-xs text-slate-600 leading-relaxed">
+                                    No, bajo ningún concepto. UYWA es una iniciativa totalmente altruista y sin fines de
+                                    lucro. El registro de reportes de mascotas, la búsqueda de adopciones y la
+                                    comunicación con refugios o familias colaboradoras es 100% gratuita.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Item 2 -->
+                        <div
+                            class="faq-accordion-item bg-brand-lightBg border border-brand-border rounded-2xl overflow-hidden transition-all duration-300">
+                            <div class="faq-accordion-header p-6 flex justify-between items-center font-bold text-slate-800 font-Fredoka select-none"
+                                onclick="toggleFaq(this)">
+                                <span>¿Cómo funciona el mapa interactivo y la geolocalización S.O.S?</span>
+                                <i
+                                    class="fas fa-chevron-down faq-arrow text-brand-teal transition-transform duration-300"></i>
+                            </div>
+                            <div class="faq-accordion-body">
+                                <div class="px-6 pb-6 text-xs text-slate-600 leading-relaxed">
+                                    Cuando publicas una mascota bajo el estado de "Perdida", la app recopila tu
+                                    ubicación estimada en el mapa (respetando tu privacidad y sin divulgar la dirección
+                                    exacta) y emite notificaciones instantáneas (push notifications) a todos los
+                                    usuarios que se encuentren en un radio de 500 metros a la redonda para que puedan
+                                    mantenerse alerta durante sus caminatas cotidianas.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Item 3 -->
+                        <div
+                            class="faq-accordion-item bg-brand-lightBg border border-brand-border rounded-2xl overflow-hidden transition-all duration-300">
+                            <div class="faq-accordion-header p-6 flex justify-between items-center font-bold text-slate-800 font-Fredoka select-none"
+                                onclick="toggleFaq(this)">
+                                <span>¿Cualquier usuario puede reportar una mascota en adopción?</span>
+                                <i
+                                    class="fas fa-chevron-down faq-arrow text-brand-teal transition-transform duration-300"></i>
+                            </div>
+                            <div class="faq-accordion-body">
+                                <div class="px-6 pb-6 text-xs text-slate-600 leading-relaxed">
+                                    Sí, pero todo reporte de adopción pasa por un filtro de verificación estricto por
+                                    parte de nuestros moderadores comunitarios. Esto evita el abandono encubierto o la
+                                    mercantilización de los animales domésticos. Promovemos estrictamente la adopción
+                                    responsable avalada por la Ley 700 en Bolivia.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Item 4 -->
+                        <div
+                            class="faq-accordion-item bg-brand-lightBg border border-brand-border rounded-2xl overflow-hidden transition-all duration-300">
+                            <div class="faq-accordion-header p-6 flex justify-between items-center font-bold text-slate-800 font-Fredoka select-none"
+                                onclick="toggleFaq(this)">
+                                <span>¿Cómo puedo registrar mi refugio o clínica de rescate en la app?</span>
+                                <i
+                                    class="fas fa-chevron-down faq-arrow text-brand-teal transition-transform duration-300"></i>
+                            </div>
+                            <div class="faq-accordion-body">
+                                <div class="px-6 pb-6 text-xs text-slate-600 leading-relaxed">
+                                    Es muy sencillo. Visita la sección de soporte o envíanos un correo directamente con
+                                    tus papeles de personería jurídica o licencias de funcionamiento municipal en el
+                                    caso de clínicas. Nuestro equipo de soporte validará los datos y te otorgará un
+                                    perfil especial verificado para que puedas publicar de forma automatizada.
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ==================== VISTA: SOPORTE TÉCNICO ==================== -->
+        <div id="view-soporte" class="view-container">
+            <section class="py-16 bg-gradient-to-b from-teal-50/30 to-white">
+                <div class="container mx-auto px-6">
+                    <div class="max-w-[800px] mx-auto text-center mb-16">
+                        <span
+                            class="inline-block bg-brand-teal/10 border border-brand-teal/20 text-teal-800 py-1 px-4 rounded-full text-xs font-semibold mb-3">
+                            Canal Directo de Ayuda
+                        </span>
+                        <h1 class="text-4xl md:text-5xl font-extrabold text-brand-dark mb-4">Soporte Técnico de UYWA
+                        </h1>
+                        <p class="text-slate-600 text-lg">¿Tienes problemas con la aplicación, quieres denunciar malas
+                            prácticas de un usuario o quieres proponer una alianza? Completa este formulario.</p>
+                    </div>
+
+                    <div
+                        class="max-w-[620px] mx-auto bg-white border border-brand-border p-8 md:p-12 rounded-[32px] shadow-lg relative">
+                        <form id="supportForm" onsubmit="handleSupportSubmit(event)" class="flex flex-col gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-2">Nombre Completo</label>
+                                <input type="text" required id="supName" placeholder="Ej. Juan Pérez"
+                                    class="w-full bg-brand-lightBg border border-brand-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-brand-teal transition-colors">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-2">Correo Electrónico de
+                                    Contacto</label>
+                                <input type="email" required id="supEmail" placeholder="Ej. juan.perez@email.com"
+                                    class="w-full bg-brand-lightBg border border-brand-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-brand-teal transition-colors">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-2">Tipo de Solicitud</label>
+                                <select id="supType"
+                                    class="w-full bg-brand-lightBg border border-brand-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-brand-teal transition-colors">
+                                    <option value="report">Reportar error de la App (Bug)</option>
+                                    <option value="abuse">Denunciar maltrato / Cuenta fraudulenta</option>
+                                    <option value="shelter">Registro de Refugio / Asociación</option>
+                                    <option value="alliance">Alianzas y Patrocinios</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-2">Explicación Detallada</label>
+                                <textarea required id="supMsg" rows="5"
+                                    placeholder="Cuéntanos con el mayor detalle posible para ayudarte rápido..."
+                                    class="w-full bg-brand-lightBg border border-brand-border rounded-xl px-4 py-3 text-xs focus:outline-none focus:border-brand-teal transition-colors"></textarea>
+                            </div>
+
+                            <button type="submit"
+                                class="w-full bg-gradient-to-r from-brand-teal to-brand-tealHover py-3.5 rounded-full text-white font-bold hover:scale-[1.02] transition-transform duration-300">
+                                Enviar Mensaje de Soporte
+                            </button>
+                        </form>
+
+                        <!-- Success view inside the card -->
+                        <div id="supportSuccess" class="hidden text-center py-12">
+                            <div
+                                class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-6">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-brand-dark mb-2 font-Fredoka">¡Mensaje Recibido de Forma
+                                Segura!</h3>
+                            <p class="text-slate-500 text-sm leading-relaxed mb-6">
+                                Hemos registrado tu ticket de soporte de manera exitosa. Nuestro equipo de voluntarios
+                                revisará los datos adjuntos y te responderá en el transcurso de las próximas 24-48 horas
+                                hábiles.
+                            </p>
+                            <button onclick="resetSupportForm()"
+                                class="bg-brand-teal hover:bg-brand-tealHover text-white font-bold text-xs px-6 py-2.5 rounded-full transition-colors">
+                                Enviar otro ticket
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ==================== VISTA: TÉRMINOS Y PRIVACIDAD ==================== -->
+        <div id="view-terminos" class="view-container">
+            <section class="py-16 bg-white">
+                <div class="container mx-auto px-6 max-w-[800px]">
+                    <span
+                        class="inline-block bg-slate-100 text-slate-600 py-1 px-4 rounded-full text-xs font-semibold mb-4">Legal
+                        & Privacidad</span>
+                    <h1 class="text-4xl font-extrabold text-brand-dark mb-6 font-Fredoka">Términos, Condiciones y
+                        Privacidad</h1>
+                    <p class="text-xs text-slate-400 mb-8">Última actualización: 26 de Junio, 2026</p>
+
+                    <div class="prose prose-slate text-xs text-slate-600 leading-relaxed flex flex-col gap-6">
+                        <div>
+                            <h3 class="text-lg font-bold text-brand-dark mb-2 font-Fredoka">1. Aceptación de los
+                                Términos</h3>
+                            <p>Al descargar, instalar o utilizar la aplicación móvil UYWA y su plataforma web vinculada,
+                                aceptas sujetarte plenamente a las directrices descritas en este documento legal. Si no
+                                estás de acuerdo con alguna de las políticas establecidas, te instamos a suspender de
+                                inmediato el uso del servicio.</p>
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-bold text-brand-dark mb-2 font-Fredoka">2. Naturaleza del Servicio
+                            </h3>
+                            <p>UYWA opera exclusivamente como un canal de intermediación tecnológica y comunitaria que
+                                busca velar por el bienestar de los animales domésticos extraviados o desamparados. No
+                                somos un refugio físico oficial, no nos dedicamos a la venta de animales domésticos de
+                                raza ni participamos activamente de las transacciones resultantes de las adopciones.</p>
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-bold text-brand-dark mb-2 font-Fredoka">3. Directrices sobre Uso de
+                                Datos Georreferenciados</h3>
+                            <p>Para habilitar el rastreo de mascotas extraviadas y el envío correcto de alertas S.O.S,
+                                UYWA requiere el uso de coordenadas de geolocalización. El usuario consiente de manera
+                                informada y libre que la aplicación recopile estos datos. Garantizamos que el radio
+                                exacto de la ubicación vecinal nunca será compartido públicamente con terceros, sino que
+                                se proyectará de forma aproximada sobre el mapa interactivo para proteger la intimidad
+                                domiciliaria.</p>
+                        </div>
+
+                        <div>
+                            <h3 class="text-lg font-bold text-brand-dark mb-2 font-Fredoka">4. Ley Aplicable en
+                                Territorio Nacional</h3>
+                            <p>Todas las interacciones de adopción, resguardo, cuidado de animales y denuncias
+                                realizadas mediante la plataforma se rigen explícitamente bajo la legislación boliviana
+                                y en específico bajo los términos estipulados en la Ley 700 "Para la Defensa de los
+                                Animales Contra Actos de Crueldad y Maltrato".</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ==================== VISTA: REFUGIOS ASOCIADOS ==================== -->
+        <div id="view-refugios" class="view-container">
+            <section class="py-16 bg-gradient-to-b from-teal-50/50 to-white">
+                <div class="container mx-auto px-6">
+                    <div class="max-w-[800px] mx-auto text-center mb-16">
+                        <span
+                            class="inline-block bg-brand-teal/10 border border-brand-teal/20 text-teal-800 py-1 px-4 rounded-full text-xs font-semibold mb-3">
+                            Red de Salvación
+                        </span>
+                        <h1 class="text-4xl md:text-5xl font-extrabold text-brand-dark mb-4">Refugios Asociados</h1>
+                        <p class="text-slate-600 text-lg">Explora y colabora directamente con los albergues de rescate
+                            animal verificados por el equipo de UYWA en toda Bolivia.</p>
+                    </div>
+
+                    <!-- Filtro por Departamento -->
+                    <div class="flex justify-center gap-3 flex-wrap mb-12">
+                        <button onclick="filterShelters('all')"
+                            class="shelter-filter-btn active bg-brand-teal text-white text-xs font-bold px-5 py-2.5 rounded-full transition-colors">Todos</button>
+                        <button onclick="filterShelters('lp')"
+                            class="shelter-filter-btn bg-white border border-slate-300 text-slate-700 text-xs font-bold px-5 py-2.5 rounded-full hover:border-brand-teal transition-colors">La
+                            Paz</button>
+                        <button onclick="filterShelters('sc')"
+                            class="shelter-filter-btn bg-white border border-slate-300 text-slate-700 text-xs font-bold px-5 py-2.5 rounded-full hover:border-brand-teal transition-colors">Santa
+                            Cruz</button>
+                        <button onclick="filterShelters('cb')"
+                            class="shelter-filter-btn bg-white border border-slate-300 text-slate-700 text-xs font-bold px-5 py-2.5 rounded-full hover:border-brand-teal transition-colors">Cochabamba</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8" id="sheltersGrid">
+                        <!-- Refugio 1 (La Paz) -->
+                        <div class="shelter-card bg-white rounded-3xl border border-brand-border overflow-hidden hover:shadow-xl transition-all duration-300"
+                            data-city="lp">
+                            <div class="bg-slate-300 h-48 relative">
+                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwbACZrxg6kF1mZGqv_WuglFJY-SNBMX-mqh_GqZy-Rg&s=10"
+                                    alt="Refugio Esperanza" class="w-full h-full object-cover" />
+                                <span
+                                    class="absolute top-4 left-4 bg-brand-teal text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">La
+                                    Paz</span>
+                            </div>
+                            <div class="p-6">
+                                <h3 class="font-bold text-xl text-brand-dark font-Fredoka mb-2">Refugio Esperanza Animal
+                                </h3>
+                                <p class="text-slate-500 text-xs leading-relaxed mb-4">Dedicados al rescate y
+                                    rehabilitación de perros de la calle en zonas de El Alto y La Paz central. Espacio
+                                    actual de resguardo de 80 perritos.</p>
+                                <div class="flex items-center justify-between pt-4 border-t border-brand-border">
+                                    <span class="text-xs font-semibold text-brand-teal"><i class="fas fa-dog"></i> 14
+                                        Listos para Adopción</span>
+                                    <button onclick="simulatedAction(event, 'Conectando con Refugio Esperanza...')"
+                                        class="bg-brand-teal hover:bg-brand-tealHover text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors">Donar
+                                        o Adoptar</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Refugio 2 (Santa Cruz) -->
+                        <div class="shelter-card bg-white rounded-3xl border border-brand-border overflow-hidden hover:shadow-xl transition-all duration-300"
+                            data-city="sc">
+                            <div class="bg-slate-300 h-48 relative">
+                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3k5A_bUY4L2d3pNfsFl-rlcKBUUVRe_TtdLg5VWJjDA&s=10"
+                                    alt="Hogar de Mascotas" class="w-full h-full object-cover" />
+                                <span
+                                    class="absolute top-4 left-4 bg-brand-teal text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">Santa
+                                    Cruz</span>
+                            </div>
+                            <div class="p-6">
+                                <h3 class="font-bold text-xl text-brand-dark font-Fredoka mb-2">Hogar de Gatitos Felices
+                                </h3>
+                                <p class="text-slate-500 text-xs leading-relaxed mb-4">Especializados en el rescate de
+                                    camadas de felinos abandonadas. Campañas masivas mensuales de esterilización y
+                                    cuidado responsable.</p>
+                                <div class="flex items-center justify-between pt-4 border-t border-brand-border">
+                                    <span class="text-xs font-semibold text-brand-teal"><i class="fas fa-cat"></i> 22
+                                        Listos para Adopción</span>
+                                    <button
+                                        onclick="simulatedAction(event, 'Conectando con Hogar de Gatitos Felices...')"
+                                        class="bg-brand-teal hover:bg-brand-tealHover text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors">Donar
+                                        o Adoptar</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Refugio 3 (Cochabamba) -->
+                        <div class="shelter-card bg-white rounded-3xl border border-brand-border overflow-hidden hover:shadow-xl transition-all duration-300"
+                            data-city="cb">
+                            <div class="bg-slate-300 h-48 relative">
+                                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQf7nr9Dq5WhH47mWNLk8FRQUH5pyBZiotrelrVTh0vuQ&s=10"
+                                    alt="Rescate Cocha" class="w-full h-full object-cover" />
+                                <span
+                                    class="absolute top-4 left-4 bg-brand-teal text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">Cochabamba</span>
+                            </div>
+                            <div class="p-6">
+                                <h3 class="font-bold text-xl text-brand-dark font-Fredoka mb-2">Fundación Huellitas de
+                                    Cochabamba</h3>
+                                <p class="text-slate-500 text-xs leading-relaxed mb-4">Institución histórica orientada a
+                                    dar asistencia inmediata y refugio temporal a perritos lesionados de gravedad en las
+                                    avenidas periféricas.</p>
+                                <div class="flex items-center justify-between pt-4 border-t border-brand-border">
+                                    <span class="text-xs font-semibold text-brand-teal"><i class="fas fa-heart"></i> 10
+                                        Listos para Adopción</span>
+                                    <button onclick="simulatedAction(event, 'Conectando con Fundación Huellitas...')"
+                                        class="bg-brand-teal hover:bg-brand-tealHover text-white text-xs font-bold px-4 py-2 rounded-xl transition-colors">Donar
+                                        o Adoptar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <!-- ===== MODAL EXCLUSIVO QR ===== -->
+    <div class="modal-overlay" id="qrModal" onclick="closeQrModalOnOverlay(event)">
+        <div
+            class="modal-card bg-white border border-brand-border rounded-[32px] p-8 max-w-[440px] w-[90%] text-center relative shadow-2xl">
+            <span
+                class="absolute top-5 right-5 text-xl text-slate-400 hover:text-brand-dark cursor-pointer transition-colors"
+                onclick="closeQrModal()"><i class="fas fa-times"></i></span>
+            <h3 class="text-2xl font-bold text-brand-dark mb-2 font-Fredoka">Escanear Código QR</h3>
+            <p class="text-slate-500 text-sm mb-6">Apunta con la cámara de tu móvil para ir directamente a la tienda
+                correspondiente según tu dispositivo.</p>
+
+            <div
+                class="qr-placeholder bg-white border-4 border-brand-teal rounded-3xl w-48 h-48 mx-auto p-4 flex items-center justify-center relative mb-6 shadow-md">
+                <div class="simulated-qr"></div>
+                <div class="simulated-qr-corner sq-tl"></div>
+                <div class="simulated-qr-corner sq-tr"></div>
+                <div class="simulated-qr-corner sq-bl"></div>
+            </div>
+
+            <p class="text-xs text-brand-teal font-semibold"><i class="fas fa-shield-alt"></i> Descarga Segura y
+                Verificada</p>
+        </div>
+    </div>
+
+    <!-- ===== MODAL PROXIMAMENTE (COMING SOON) ===== -->
+    <div class="modal-overlay" id="comingSoonModal" onclick="closeComingSoonModalOnOverlay(event)">
+        <div
+            class="modal-card bg-white border border-brand-border rounded-[32px] p-8 max-w-[450px] w-[90%] text-center relative shadow-2xl">
+            <span
+                class="absolute top-5 right-5 text-xl text-slate-400 hover:text-brand-dark cursor-pointer transition-colors"
+                onclick="closeComingSoonModal()"><i class="fas fa-times"></i></span>
+
+            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-3xl mx-auto mb-4">
+                🚀
+            </div>
+
+            <h3 class="text-2xl font-bold text-brand-dark mb-2 font-Fredoka">¡Muy pronto disponible!</h3>
+            <p class="text-slate-500 text-sm mb-6">
+                Estamos puliendo los últimos detalles para garantizar una experiencia de rescate y protección impecable
+                en iOS y Android.
+            </p>
+
+            <div class="bg-brand-lightBg p-4 rounded-2xl border border-brand-border mb-6 text-left">
+                <p class="text-xs font-semibold text-brand-dark mb-2">¡Recibe una notificación de lanzamiento!</p>
+                <form onsubmit="handleNotificationSubscription(event)" class="flex gap-2">
+                    <input type="email" required id="comingSoonEmail" placeholder="Tu correo electrónico"
+                        class="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-brand-teal" />
+                    <button type="submit"
+                        class="bg-brand-teal hover:bg-brand-tealHover text-white font-bold text-xs px-4 py-2 rounded-xl transition-colors">
+                        Unirse
+                    </button>
+                </form>
+                <p id="subscriptionFeedback" class="text-xs text-emerald-600 font-semibold mt-2 hidden">
+                    🎉 ¡Registrado con éxito! Te avisaremos el primer día.
+                </p>
+            </div>
+
+            <p class="text-[11px] text-slate-400"><i class="fas fa-heart text-brand-orange"></i> Gracias por querer
+                ayudar a los animales de tu localidad.</p>
+        </div>
+    </div>
+
+    <!-- ===== TOAST ALERTS INTERNOS (Reemplaza alert()) ===== -->
+    <div id="toastAlert"
+        class="fixed bottom-6 right-6 bg-brand-dark/95 text-white py-3 px-6 rounded-2xl shadow-xl z-[3000] flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <span id="toastIcon">ℹ️</span>
+        <span id="toastMsg" class="text-xs font-bold"></span>
+    </div>
+
+    <!-- ===== FOOTER (SPA NAVIGATION CONTAINER) ===== -->
+    <footer class="bg-slate-900 text-slate-400 py-16 border-t border-slate-800">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+                <div>
+                    <a href="#home" class="logo flex items-center gap-2 text-2xl font-bold text-white mb-6">
+                        <img src="IMG-20260626-WA0027.jpg/IMG-20260626-WA0008.jpg" alt="UYWA"
+                            class="w-10 h-10 object-cover rounded-full border border-slate-700 transition-transform duration-300 hover:scale-110"
+                            onerror="this.src='https://placehold.co/40x40/5BC0BE/ffffff?text=🐾'" />
+                        <span>UYWA</span>
+                    </a>
+                    <p class="text-slate-400 text-sm leading-relaxed mb-6">
+                        La plataforma comunitaria enfocada en conectar corazones y proteger la integridad de
+                        los animales domésticos.
+                    </p>
+                    <div class="flex gap-3">
+                        <a href="#"
+                            class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:bg-brand-teal hover:text-slate-900 hover:border-brand-teal transition-all"><i
+                                class="fab fa-instagram"></i></a>
+                        <a href="#"
+                            class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:bg-brand-teal hover:text-slate-900 hover:border-brand-teal transition-all"><i
+                                class="fab fa-facebook-f"></i></a>
+                        <a href="#"
+                            class="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 hover:bg-brand-teal hover:text-slate-900 hover:border-brand-teal transition-all"><i
+                                class="fab fa-twitter"></i></a>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold text-lg mb-6">Landing Page</h4>
+                    <ul class="flex flex-col gap-3.5 text-sm">
+                        <li><a href="#home" class="hover:text-brand-teal transition-colors">Inicio</a></li>
+                        <li><a href="#features" class="hover:text-brand-teal transition-colors">Características</a></li>
+                        <li><a href="#capturas" class="hover:text-brand-teal transition-colors">Funcionalidades</a>
+                        </li>
+                        <li><a href="#status" class="hover:text-brand-teal transition-colors">Clasificación</a>
+                        </li>
+                        <li><a href="#testimonios" class="hover:text-brand-teal transition-colors">Testimonios</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold text-lg mb-6">Páginas de la App</h4>
+                    <!-- Subpage links strictly defined here in the footer -->
+                    <ul class="flex flex-col gap-3.5 text-sm">
+                        <li><a href="#/guia-adopcion" class="hover:text-brand-teal transition-colors">Guía de
+                                Adopción</a></li>
+                        <li><a href="#/refugios" class="hover:text-brand-teal transition-colors">Refugios Asociados</a>
+                        </li>
+                        <li><a href="#/ayuda" class="hover:text-brand-teal transition-colors">S.O.S Ayuda Urgente</a>
+                        </li>
+                        <li><a href="#/faqs" class="hover:text-brand-teal transition-colors">Preguntas Frecuentes</a>
+                        </li>
+                        <li><a href="#/soporte" class="hover:text-brand-teal transition-colors">Soporte Técnico</a></li>
+                        <li><a href="#/terminos" class="hover:text-brand-teal transition-colors">Términos y
+                                Privacidad</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold text-lg mb-6">Soporte Comunitario</h4>
+                    <ul class="flex flex-col gap-3.5 text-sm">
+                        <li><a href="#/soporte" class="hover:text-brand-teal transition-colors">Reportar Abuso /
+                                Cuenta</a></li>
+                        <li><a href="#/soporte" class="hover:text-brand-teal transition-colors">Registrar mi Refugio</a>
+                        </li>
+                        <li><a href="#/soporte" class="hover:text-brand-teal transition-colors">Alianzas Comerciales</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-slate-800 pt-8 text-center text-sm text-slate-500">
+                <p>© 2026 UYWA Inc. Todos los derechos reservados. Cuidando con amor y tecnología.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ===== SCRIPTS ===== -->
+    <script>
+        // --- SPA ROUTER SYSTEM ---
+        const viewsMap = {
+            '#/home': 'view-home',
+            '#/guia-adopcion': 'view-guia-adopcion',
+            '#/ayuda': 'view-ayuda',
+            '#/faqs': 'view-faqs',
+            '#/soporte': 'view-soporte',
+            '#/terminos': 'view-terminos',
+            '#/refugios': 'view-refugios'
+        };
+
+        function handleSPA_Routing() {
+            const currentHash = window.location.hash || '#home';
+
+            // Cerrar menú móvil al navegar
+            navLinks.classList.remove('open');
+            navLinks.classList.add('hidden');
+            const icon = menuToggle.querySelector('i');
+            icon.className = 'fas fa-bars';
+
+            const isSubpage = currentHash.startsWith('#/');
+
+            if (isSubpage) {
+                // Ocultar todas las vistas
+                document.querySelectorAll('.view-container').forEach(view => {
+                    view.classList.remove('active-view');
+                });
+
+                // Encontrar y mostrar la vista correspondiente
+                const targetViewId = viewsMap[currentHash] || 'view-home';
+                const targetViewElement = document.getElementById(targetViewId);
+
+                if (targetViewElement) {
+                    targetViewElement.classList.add('active-view');
+
+                    // Efecto Scroll to Top para simular cambio de página nativo
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                }
+            } else {
+                // Es un enlace de anclaje interno en el home (ej. #features, #simulador)
+                // Aseguramos que la vista activa sea únicamente la Home/Landing
+                document.querySelectorAll('.view-container').forEach(view => {
+                    view.classList.remove('active-view');
+                });
+                document.getElementById('view-home').classList.add('active-view');
+
+                // Encontramos el elemento objetivo para realizar el scroll con compensación de header
+                const targetId = currentHash.substring(1);
+                if (targetId) {
+                    const targetEl = document.getElementById(targetId);
+                    if (targetEl) {
+                        const headerOffset = 90;
+                        const elementPosition = targetEl.getBoundingClientRect().top;
+                        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                        window.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            }
+        }
+
+        window.addEventListener('hashchange', handleSPA_Routing);
+        window.addEventListener('load', () => {
+            // Si entra por un enlace vacío, por defecto home
+            if (!window.location.hash) {
+                window.location.hash = '#home';
+            }
+            handleSPA_Routing();
+        });
+
+        // --- MENÚ HAMBURGUESA MOBILE ---
+        const menuToggle = document.getElementById('menuToggle');
+        const navLinks = document.getElementById('navLinks');
+
+        menuToggle.addEventListener('click', () => {
+            navLinks.classList.toggle('open');
+            navLinks.classList.toggle('hidden');
+            navLinks.classList.toggle('flex');
+            const icon = menuToggle.querySelector('i');
+            icon.className = navLinks.classList.contains('open') ? 'fas fa-times' : 'fas fa-bars';
+        });
+
+        // --- EFECTO SCROLL HEADER ---
+        window.addEventListener('scroll', () => {
+            const header = document.getElementById('mainHeader');
+            if (window.scrollY > 50) {
+                header.classList.add('shadow-md', 'py-3', 'bg-white/95');
+                header.classList.remove('py-4', 'bg-white/80');
+            } else {
+                header.classList.add('py-4', 'bg-white/80');
+                header.classList.remove('shadow-md', 'py-3', 'bg-white/95');
+            }
+        });
+
+        // --- HERO SLIDER (CON ANIMACIÓN DE RETIRO SUPERIOR IZQUIERDA) ---
+        /* ===== HERO SLIDER MODERNO ===== */
+        let currentSlideIdx = 0;
+        const slides = document.querySelectorAll('.hero-slide');
+        const dots = document.querySelectorAll('.slider-dot');
+        const sliderContainer = document.getElementById('heroSlider');
+        let sliderTimer;
+        let isPaused = false;
+
+        function updateDots(index) {
+            dots.forEach(function(dot, i) {
+                if (i === index) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        }
+
+        function showHeroSlide(nextIdx) {
+            var currentSlide = slides[currentSlideIdx];
+            var nextSlide = slides[nextIdx];
+
+            if (!currentSlide || !nextSlide) return;
+            if (currentSlide === nextSlide) return;
+
+            currentSlide.classList.remove('active');
+            currentSlide.classList.add('exiting');
+
+            nextSlide.classList.remove('exiting');
+            nextSlide.classList.add('entering');
+
+            setTimeout(function() {
+                currentSlide.classList.remove('exiting');
+                nextSlide.classList.remove('entering');
+                nextSlide.classList.add('active');
+            }, 950);
+
+            currentSlideIdx = nextIdx;
+            updateDots(nextIdx);
+        }
+
+        function goToSlide(index) {
+            if (index === currentSlideIdx) return;
+            showHeroSlide(index);
+            resetSliderTimer();
+        }
+
+        function nextHeroSlide() {
+            var nextIdx = (currentSlideIdx + 1) % slides.length;
+            showHeroSlide(nextIdx);
+            resetSliderTimer();
+        }
+
+        function startSliderTimer() {
+            if (sliderTimer) clearInterval(sliderTimer);
+            sliderTimer = setInterval(function() {
+                if (!isPaused) {
+                    nextHeroSlide();
+                }
+            }, 6000);
+        }
+
+        function resetSliderTimer() {
+            clearInterval(sliderTimer);
+            startSliderTimer();
+        }
+
+        dots.forEach(function(dot) {
+            dot.addEventListener('click', function() {
+                var index = parseInt(this.getAttribute('data-slide'));
+                goToSlide(index);
+            });
+        });
+
+        if (sliderContainer) {
+            sliderContainer.addEventListener('mouseenter', function() {
+                isPaused = true;
+            });
+            sliderContainer.addEventListener('mouseleave', function() {
+                isPaused = false;
+            });
+        }
+
+        startSliderTimer();
+
+        // --- INTERACTIVE SIMULATOR (VIRTUAL APP SCREEN) ---
+        function switchSimulatorState(stateId, element) {
+            document.querySelectorAll('.sim-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+
+            document.querySelectorAll('.sim-state').forEach(state => state.classList.remove('active'));
+            document.getElementById(`state-${stateId}`).classList.add('active');
+        }
+
+        // --- TESTIMONIALS SLIDER ---
+        let testiIdx = 0;
+        const testiSlides = document.querySelectorAll('.testi-slide');
+
+        function slideTestimonials(dir) {
+            testiSlides[testiIdx].classList.add('hidden');
+            testiSlides[testiIdx].classList.remove('active');
+
+            testiIdx += dir;
+            if (testiIdx >= testiSlides.length) {
+                testiIdx = 0;
+            } else if (testiIdx < 0) {
+                testiIdx = testiSlides.length - 1;
+            }
+
+            testiSlides[testiIdx].classList.remove('hidden');
+            testiSlides[testiIdx].classList.add('active');
+        }
+
+        // --- SCROLL REVEAL ANIMATIONS ---
+        const revealElements = document.querySelectorAll('.reveal');
+
+        function checkReveal() {
+            const triggerBottom = window.innerHeight * 0.85;
+            revealElements.forEach(el => {
+                const elTop = el.getBoundingClientRect().top;
+                if (elTop < triggerBottom) {
+                    el.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', checkReveal);
+        window.addEventListener('load', checkReveal);
+
+        // --- MODAL DE QR (SOLO PARA QR) ---
+        const qrModal = document.getElementById('qrModal');
+
+        function openQrModal(event) {
+            event.preventDefault();
+            qrModal.classList.add('active');
+        }
+
+        function closeQrModal() {
+            qrModal.classList.remove('active');
+        }
+
+        function closeQrModalOnOverlay(event) {
+            if (event.target === qrModal) {
+                closeQrModal();
+            }
+        }
+
+        // --- MODAL "PROXIMAMENTE" (COMING SOON) ---
+        const comingSoonModal = document.getElementById('comingSoonModal');
+
+        function openComingSoonModal(event) {
+            event.preventDefault();
+            comingSoonModal.classList.add('active');
+            document.getElementById('subscriptionFeedback').classList.add('hidden');
+            document.getElementById('comingSoonEmail').value = '';
+        }
+
+        function closeComingSoonModal() {
+            comingSoonModal.classList.remove('active');
+        }
+
+        function closeComingSoonModalOnOverlay(event) {
+            if (event.target === comingSoonModal) {
+                closeComingSoonModal();
+            }
+        }
+
+        function handleNotificationSubscription(event) {
+            event.preventDefault();
+            const email = document.getElementById('comingSoonEmail').value;
+            if (email) {
+                const feedback = document.getElementById('subscriptionFeedback');
+                feedback.classList.remove('hidden');
+                document.getElementById('comingSoonEmail').value = '';
+
+                setTimeout(() => {
+                    closeComingSoonModal();
+                }, 2200);
+            }
+        }
+
+        // --- COMPONENTE INTERACTIVO: GUÍA CHECKLIST ---
+        function updateAdoptionScore() {
+            const totalCheckboxes = document.querySelectorAll('#adoptionChecklist input[type="checkbox"]');
+            const checkedBoxes = document.querySelectorAll('#adoptionChecklist input[type="checkbox"]:checked');
+            const scoreLabel = document.getElementById('checklistScore');
+
+            scoreLabel.textContent = `${checkedBoxes.length} / ${totalCheckboxes.length} Cumplidos`;
+        }
+
+        // --- COMPONENTE INTERACTIVO: CLÍNICAS VETERINARIAS ---
+        function filterVets(city) {
+            document.querySelectorAll('.vet-filter-btn').forEach(btn => btn.classList.remove('active', 'bg-brand-teal', 'text-white'));
+            document.querySelectorAll('.vet-filter-btn').forEach(btn => btn.classList.add('bg-white', 'border', 'border-slate-300', 'text-slate-700'));
+
+            event.target.classList.remove('bg-white', 'border', 'border-slate-300', 'text-slate-700');
+            event.target.classList.add('active', 'bg-brand-teal', 'text-white');
+
+            const cards = document.querySelectorAll('#vetsGrid .vet-card');
+            cards.forEach(card => {
+                if (city === 'all' || card.getAttribute('data-city') === city) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // --- COMPONENTE INTERACTIVO: CATÁLOGO DE REFUGIOS ---
+        function filterShelters(city) {
+            document.querySelectorAll('.shelter-filter-btn').forEach(btn => btn.classList.remove('active', 'bg-brand-teal', 'text-white'));
+            document.querySelectorAll('.shelter-filter-btn').forEach(btn => btn.classList.add('bg-white', 'border', 'border-slate-300', 'text-slate-700'));
+
+            event.target.classList.remove('bg-white', 'border', 'border-slate-300', 'text-slate-700');
+            event.target.classList.add('active', 'bg-brand-teal', 'text-white');
+
+            const cards = document.querySelectorAll('#sheltersGrid .shelter-card');
+            cards.forEach(card => {
+                if (city === 'all' || card.getAttribute('data-city') === city) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // --- COMPONENTE INTERACTIVO: ACORDEÓN DE PREGUNTAS FRECUENTES (FAQS) ---
+        function toggleFaq(header) {
+            const item = header.parentElement;
+            const isActive = item.classList.contains('active');
+
+            // Cerrar todos los demás items
+            document.querySelectorAll('.faq-accordion-item').forEach(i => i.classList.remove('active'));
+
+            if (!isActive) {
+                item.classList.add('active');
+            }
+        }
+
+        // --- COMPONENTE INTERACTIVO: SOPORTE TÉCNICO FORM ---
+        function handleSupportSubmit(event) {
+            event.preventDefault();
+            document.getElementById('supportForm').classList.add('hidden');
+            document.getElementById('supportSuccess').classList.remove('hidden');
+        }
+
+        function resetSupportForm() {
+            document.getElementById('supName').value = '';
+            document.getElementById('supEmail').value = '';
+            document.getElementById('supMsg').value = '';
+            document.getElementById('supportForm').classList.remove('hidden');
+            document.getElementById('supportSuccess').classList.add('hidden');
+        }
+
+        // --- ALERTA INTERNA TOAST (REEMPLAZA AL NATIVO alert()) ---
+        function triggerToast(message, icon = 'ℹ️') {
+            const toast = document.getElementById('toastAlert');
+            const toastMsg = document.getElementById('toastMsg');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastMsg.textContent = message;
+            toastIcon.textContent = icon;
+
+            // Mostrar toast
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            // Ocultar automáticamente en 3 segundos
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+
+        function simulatedAction(event, simulatedMessage) {
+            event.preventDefault();
+            triggerToast(simulatedMessage, '📱');
+        }
+
+        /* ===== Vista previa de capturas de pantalla ===== */
+        function openScreenshotPreview(imgSrc, title, description) {
+            var overlay = document.createElement('div');
+            overlay.className = 'fixed inset-0 bg-black/70 backdrop-blur-md z-[3000] flex items-center justify-center p-4';
+            overlay.style.opacity = '0';
+            overlay.style.transition = 'opacity 0.3s ease';
+            overlay.onclick = function (e) {
+                if (e.target === overlay) closePreview(overlay);
+            };
+
+            var modal = document.createElement('div');
+            modal.className = 'bg-white rounded-[32px] overflow-hidden max-w-[400px] w-full shadow-2xl transform scale-95';
+            modal.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            modal.onclick = function (e) { e.stopPropagation(); };
+
+            var html = '';
+            html += '<div class="relative">';
+            html += '<button onclick="this.closest(\'.fixed\').remove()" class="absolute top-3 right-3 w-8 h-8 bg-black/40 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/60 transition-colors z-10">';
+            html += '<i class="fas fa-times text-sm"></i>';
+            html += '</button>';
+            html += '<div class="bg-slate-950 p-3">';
+            html += '<img src="' + imgSrc + '" alt="' + title + '" class="w-full max-h-[65vh] object-contain rounded-2xl mx-auto" onerror="this.src=\'https://placehold.co/400x700/E2E8F0/0F172A?text=' + encodeURIComponent(title) + '\'" />';
+            html += '</div>';
+            html += '</div>';
+            html += '<div class="p-6 text-center">';
+            html += '<h3 class="text-xl font-bold text-brand-dark font-Fredoka mb-2">' + title + '</h3>';
+            html += '<p class="text-slate-500 text-sm leading-relaxed">' + description + '</p>';
+            html += '</div>';
+
+            modal.innerHTML = html;
+
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            requestAnimationFrame(function () {
+                overlay.style.opacity = '1';
+                modal.style.transform = 'scale(1)';
+            });
+
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePreview(overlay) {
+            overlay.style.opacity = '0';
+            var modal = overlay.querySelector('div:first-child');
+            if (modal) modal.style.transform = 'scale(0.9)';
+            setTimeout(function () {
+                overlay.remove();
+                document.body.style.overflow = '';
+            }, 300);
+        }
+
+    </script>
+</body>
+
+</html>
